@@ -1,4 +1,4 @@
-get packages
+#get packages
 install.packages('aod')
 install.packages('ggplot2')
 install.packages('dplyr')
