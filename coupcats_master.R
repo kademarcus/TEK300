@@ -427,7 +427,38 @@ write.csv(base_data, "base_data.csv", row.names = FALSE)
 ###############################################################################################
 
 
+#--------------------------War Data--------------------------------------#
+#reading in data
+url <- "https://ucdp.uu.se/downloads/ucdpprio/ucdp-prio-acd-241-xlsx.zip"
+temp <- tempfile(fileext = ".zip")
+download.file(url, temp, mode = "wb")
+unzip_dir <- tempdir()
+unzip(temp, exdir = unzip_dir)
+files <- list.files(unzip_dir, pattern = "\\.xlsx$", full.names = TRUE)
+xlsx_file <- file.path(unzip_dir, "UcdpPrioConflict_v24_1.xlsx")
+war_data <- read.xlsx(xlsx_file)
+rm(xlsx_file, files, temp, unzip_dir, url)
 
+
+war_data <- war_data %>%
+  subset(select = c(location, gwno_loc, incompatibility, year, intensity_level, type_of_conflict)) %>% 
+  dplyr::rename(country = location, 
+         ccode = gwno_loc)
+#making years and ccode numeric (not sure if ccode should be numerical or categorical)
+war_data$year <- as.numeric(war_data$year)
+base_data$year <- as.numeric(base_data$year)
+
+war_data$ccode <- as.numeric(war_data$ccode)
+base_data$ccode <- as.numeric(base_data$ccode)
+
+#merging 
+war_data <- war_data %>%
+  filter(year >= 1950) %>%
+  left_join(base_data, by = c("country", "year", "ccode"), relationship = "many-to-many")
+
+base_data <- base_data %>% 
+  left_join(war_data, by = c("country", "year", "ccode"), relationship = "many-to-many") 
+rm(war_data)
 
 
 
